@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="dashboard-container">
+    <h1>Welcome, Supplier</h1>
+    <div class="dashboard-image-container">
+        <img src="{{ url_for('static', filename='images/seller_dashboard.jpg') }}" alt="Mechanic with Wrenches" class="dashboard-image" onerror="this.style.display='none';">
+    </div>
+    <div class="tabs">
+        <button class="tab-btn active" onclick="showTab('inventory')">Inventory</button>
+    </div>
+
+    <div id="inventory" class="tab-content active">
+        <h2>Manage Inventory</h2>
+        <form action="/add_inventory" method="POST">
+            <input type="text" name="item_name" placeholder="Item Name" required>
+            <input type="number" name="quantity" placeholder="Quantity" required>
+            <input type="number" name="price" placeholder="Price" step="0.01" required>
+            <button type="submit" class="btn">Add Item</button>
+        </form>
+        <table>
+            <tr><th>ID</th><th>Item Name</th><th>Quantity</th><th>Price</th></tr>
+            {% for item in inventory %}
+                <tr><td>{{ item['InventoryID'] }}</td><td>{{ item['ItemName'] }}</td><td>{{ item['Quantity'] }}</td><td>${{ item['Price'] }}</td></tr>
+            {% endfor %}
+        </table>
+    </div>
+</div>
+<script>
+    function showTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        event.target.classList.add('active');
+    }
+</script>
+{% endblock %}

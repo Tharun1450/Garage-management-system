@@ -1,0 +1,238 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="title-container">
+        <h1>Garage Management System</h1>
+    </div>
+    <div class="login-box">
+        <h2>Sign Up</h2>
+        <form action="/signup" method="POST" id="signupForm" onsubmit="return validateForm(event)">
+            <div class="textbox">
+                <label>Full Name*:</label>
+                <input type="text" name="name" placeholder="Full Name" required>
+            </div>
+            <div class="textbox">
+                <label>Email*:</label>
+                <input type="email" name="email" placeholder="Email" required>
+            </div>
+            <div class="textbox">
+                <label>Phone Number:</label>
+                <input type="text" name="phone" placeholder="Phone Number">
+            </div>
+            <div class="textbox">
+                <label>Password*:</label>
+                <input type="password" name="password" placeholder="Password" required>
+            </div>
+            <div class="textbox">
+                <label>User Type*:</label>
+                <select name="user_type" id="user_type" required>
+                    <option value="" disabled selected>Select User Type</option>
+                    <option value="customer">Customer</option>
+                    <option value="supplier">Supplier</option>
+                </select>
+            </div>
+            <div class="textbox" id="vehicle_field" style="display: none;">
+                <label>Vehicle ID (e.g., TN40AC7643)*:</label>
+                <input type="text" name="vehicle_id" placeholder="Vehicle ID">
+
+                <label>Manufacturer*:</label>
+                <select name="manufacturer" id="manufacturer">
+                    <option value="" disabled selected>Select Manufacturer</option>
+                    <option value="Maruti Suzuki">Maruti Suzuki</option>
+                    <option value="Hyundai">Hyundai</option>
+                    <option value="Mahindra">Mahindra</option>
+                    <option value="Tata">Tata</option>
+                    <option value="Toyota">Toyota</option>
+                    <option value="Audi">Audi</option>
+                    <option value="BMW">BMW</option>
+                    <option value="Mercedes">Mercedes</option>
+                    <option value="Volvo">Volvo</option>
+                    <option value="KIA">KIA</option>
+                    <option value="Honda">Honda</option>
+                    <option value="Renault">Renault</option>
+                    <option value="Volkswagen">Volkswagen</option>
+                    <option value="Skoda">Skoda</option>
+                    <option value="MG">MG</option>
+                    <option value="Jeep">Jeep</option>
+                    <option value="Nissan">Nissan</option>
+                    <option value="Citroen">Citroen</option>
+                    <option value="BYD">BYD</option>
+                </select>
+
+                <label>Model*:</label>
+                <select name="model" id="model">
+                    <option value="" disabled selected>Select Model</option>
+                </select>
+
+                <label>Fuel Type*:</label>
+                <select name="fuel_type">
+                    <option value="" disabled selected>Select Fuel Type</option>
+                    <option value="Petrol">Petrol</option>
+                    <option value="Diesel">Diesel</option>
+                    <option value="Electric">Electric</option>
+                    <option value="Hybrid">Hybrid</option>
+                    <option value="CNG">CNG</option>
+                </select>
+
+                <label>Year of Purchase*:</label>
+                <input type="date" name="year" max="2025-03-30" min="1900-01-01">
+            </div>
+            <div class="textbox" id="shop_field" style="display: none;">
+                <label>Shop Name*:</label>
+                <input type="text" name="shop_name" placeholder="Shop Name">
+            </div>
+            <button type="submit" class="btn">Sign Up</button>
+        </form>
+        <p>Already have an account? <a href="{{ url_for('index') }}">Login</a></p>
+    </div>
+</div>
+<script>
+    const modelsByManufacturer = {
+        "Maruti Suzuki": [
+            "Dzire", "XL6", "Fronx", "Baleno", "Brezza", "Celerio", "Ciaz", "Eeco", "Ertiga",
+            "Ignis", "Grand Vitara", "Invicto", "Jimny (New Gypsy)", "S-Presso", "Swift", "Wagon-R",
+            "7 Seater Mid-Size SUV (Grand Vitara XL7)", "Alto", "Alto K10"
+        ],
+        "Hyundai": [
+            "Creta Electric", "Alcazar", "New i20", "Alcazar (7 Seater)", "Creta N Line", "Grand i10 Nios",
+            "i20 N Line", "Ioniq 5", "Kona Electric", "Creta", "Verna", "Tucson", "Venue", "Venue N Line",
+            "Aura", "Exter"
+        ],
+        "Mahindra": [
+            "Xev 9e", "BE 6", "Bolero Neo Plus", "Thar Roxx", "Bolero", "Bolero Neo", "Marazzo",
+            "Scorpio Classic", "Scorpio N", "Thar", "XUV 300", "XUV700", "XUV400", "X3O"
+        ],
+        "Tata": [
+            "Curvv", "Curvv EV", "Altroz", "Harrier", "Nexon", "Nexon EV", "Punch", "Punch Ev", "Safari",
+            "Tiago", "Tiago Ev", "Tigor", "Tigor Ev"
+        ],
+        "Toyota": [
+            "Camry", "Fortuner", "Glanza", "Hilux", "Innova Crysta", "Innova Hycross", "Rumion",
+            "Urban Cruiser Hyryder", "Vellfire", "Urban Cruiser Taisor"
+        ],
+        "Audi": [
+            "RS Q8", "Q7", "Q8 E-Tron", "Q8", "e-tron Technology", "AQ3", "Q8 Sportback E-Tron",
+            "RS e-tron GT", "A4", "A6", "A8L", "RS7 Sportback", "S5"
+        ],
+        "BMW": [
+            "iX1 LWB", "5 Series", "i5", "iX1", "i7", "XM", "i4", "2 Series Gran Coupe",
+            "3 Series Gran Limousine", "X3", "M340i", "6 Series Gran Turismo", "7 Series", "X1", "X5", "X7", "iX"
+        ],
+        "Mercedes": [
+            "EQA", "EQE", "EQS", "GLB", "C-Class", "EQB", "S-Class", "C Cabriolet", "E-Class", "EQC",
+            "GLA", "GLS", "GLE", "GLC", "G-Class", "CLS"
+        ],
+        "Volvo": [
+            "EX 40", "C40 Recharge", "XC40 Recharge", "S90", "XC 60", "XC 90", "XC 40"
+        ],
+        "KIA": [
+            "Syros", "EV 9", "Carnival", "Seltos", "Sonet", "Carens", "EV6"
+        ],
+        "Honda": [
+            "Amaze", "City", "City e:HEV", "Elevate"
+        ],
+        "Renault": [
+            "Kwid", "Triber", "Kiger", "K-ZE"
+        ],
+        "Volkswagen": [
+            "Tiguan", "Taigun", "Virtus", "Tiguan AllSpaces"
+        ],
+        "Skoda": [
+            "Kylaq", "Kushaq", "Kodiaq", "Octavia", "Superb", "Slavia"
+        ],
+        "MG": [
+            "Windsor EV", "Gloster", "Hector", "Hector Plus", "ZS-EV", "Astor"
+        ],
+        "Jeep": [
+            "Compass", "Wrangler", "Meridian", "Grand Cherokee"
+        ],
+        "Nissan": [
+            "X-Trail", "Magnite"
+        ],
+        "Citroen": [
+            "Basalt", "C3 Aircross", "C3", "e-C3", "C5 Aircross"
+        ],
+        "BYD": [
+            "SEALION 7", "eMAX 7", "BYD ATTO 3", "BYD SEAL"
+        ]
+    };
+
+    // Show/hide fields based on user type
+    document.querySelector('#user_type').addEventListener('change', function() {
+        console.log("User type changed to:", this.value);
+        document.getElementById('vehicle_field').style.display = this.value === 'customer' ? 'block' : 'none';
+        document.getElementById('shop_field').style.display = this.value === 'supplier' ? 'block' : 'none';
+    });
+
+    // Populate models based on manufacturer
+    document.querySelector('#manufacturer').addEventListener('change', function() {
+        console.log("Manufacturer selected:", this.value);
+        const modelSelect = document.querySelector('#model');
+        const manufacturer = this.value;
+        modelSelect.innerHTML = '<option value="" disabled selected>Select Model</option>';
+        if (manufacturer && modelsByManufacturer[manufacturer]) {
+            modelsByManufacturer[manufacturer].forEach(model => {
+                const option = document.createElement('option');
+                option.value = model;
+                option.textContent = model;
+                modelSelect.appendChild(option);
+            });
+            console.log("Models populated for", manufacturer);
+        } else {
+            console.warn("No models found for manufacturer:", manufacturer);
+        }
+    });
+
+    // Form validation function
+    function validateForm(event) {
+        console.log("Validating form...");
+        const form = document.querySelector('#signupForm');
+        const name = form.querySelector('input[name="name"]').value;
+        const email = form.querySelector('input[name="email"]').value;
+        const password = form.querySelector('input[name="password"]').value;
+        const userType = form.querySelector('#user_type').value;
+
+        let errors = [];
+        if (!name) errors.push("Full Name is required.");
+        if (!email) errors.push("Email is required.");
+        if (!password) errors.push("Password is required.");
+        if (!userType) errors.push("User Type is required.");
+
+        if (userType === 'customer') {
+            const vehicleId = form.querySelector('input[name="vehicle_id"]').value;
+            const manufacturer = form.querySelector('#manufacturer').value;
+            const model = form.querySelector('#model').value;
+            const fuelType = form.querySelector('select[name="fuel_type"]').value;
+            const year = form.querySelector('input[name="year"]').value;
+
+            if (!vehicleId) errors.push("Vehicle ID is required.");
+            if (!manufacturer) errors.push("Manufacturer is required.");
+            if (!model) errors.push("Model is required.");
+            if (!fuelType) errors.push("Fuel Type is required.");
+            if (!year) errors.push("Year of Purchase is required.");
+        } else if (userType === 'supplier') {
+            const shopName = form.querySelector('input[name="shop_name"]').value;
+            if (!shopName) errors.push("Shop Name is required.");
+        }
+
+        if (errors.length > 0) {
+            console.warn("Form validation failed:", errors);
+            alert(errors.join("\n"));
+            event.preventDefault();
+            return false;
+        }
+
+        console.log("Form validation passed. Submitting form...");
+        return true;
+    }
+</script>
+<style>
+    label {
+        display: block;
+        text-align: left;
+        margin-bottom: 5px;
+        color: #333;
+    }
+</style>
+{% endblock %}

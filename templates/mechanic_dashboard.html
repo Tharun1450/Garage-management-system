@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="dashboard-container">
+    <h1>Welcome, Mechanic</h1>
+    <div class="dashboard-image-container">
+        <img src="{{ url_for('static', filename='images/mechanic_dashboard.jpg') }}" alt="Mechanic with Clipboard" class="dashboard-image" onerror="this.style.display='none';">
+    </div>
+    <div class="tabs">
+        <button class="tab-btn active" onclick="showTab('services')">Assigned Services</button>
+        <button class="tab-btn" onclick="showTab('inventory')">Inventory Requests</button>
+    </div>
+
+    <div id="services" class="tab-content active">
+        <h2>Your Services</h2>
+        <table>
+            <tr><th>ID</th><th>Description</th><th>Status</th><th>Action</th></tr>
+            {% for service in services %}
+                <tr>
+                    <td>{{ service['ServiceID'] }}</td>
+                    <td>{{ service['Description'] }}</td>
+                    <td>{{ service['Status'] }}</td>
+                    <td>
+                        <form action="/update_service_status_mechanic" method="POST">
+                            <input type="hidden" name="service_id" value="{{ service['ServiceID'] }}">
+                            <select name="status" required>
+                                <option value="Pending" {% if service['Status'] == 'Pending' %}selected{% endif %}>Pending</option>
+                                <option value="Completed" {% if service['Status'] == 'Completed' %}selected{% endif %}>Completed</option>
+                            </select>
+                            <button type="submit" class="btn">Update</button>
+                        </form>
+                    </td>
+                </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <div id="inventory" class="tab-content">
+        <h2>Request Inventory</h2>
+        <form action="/request_inventory" method="POST">
+            <input type="text" name="item_name" placeholder="Item Name" required>
+            <input type="number" name="quantity" placeholder="Quantity" required>
+            <button type="submit" class="btn">Request</button>
+        </form>
+        <h3>Your Inventory Requests</h3>
+        <table>
+            <tr><th>ID</th><th>Item Name</th><th>Quantity</th><th>Status</th></tr>
+            {% for req in inventory_requests %}
+                <tr>
+                    <td>{{ req['RequestID'] }}</td>
+                    <td>{{ req['ItemName'] }}</td>
+                    <td>{{ req['Quantity'] }}</td>
+                    <td>{{ req['Status'] }}</td>
+                </tr>
+            {% endfor %}
+        </table>
+    </div>
+</div>
+<script>
+    function showTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        event.target.classList.add('active');
+    }
+</script>
+{% endblock %}

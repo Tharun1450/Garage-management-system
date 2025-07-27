@@ -1,0 +1,365 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="title-container">
+        <h1>Owner Dashboard</h1>
+    </div>
+    <div class="dashboard-image-container">
+        <img src="{{ url_for('static', filename='images/owner_dashboard.jpg') }}" alt="Owner Dashboard" class="dashboard-image">
+    </div>
+    <div class="tabs">
+        <button class="tab-btn active" onclick="openTab('customers')">Customers</button>
+        <button class="tab-btn" onclick="openTab('mechanics')">Mechanics</button>
+        <button class="tab-btn" onclick="openTab('suppliers')">Suppliers</button>
+        <button class="tab-btn" onclick="openTab('services')">Customer Requested Services</button>
+        <button class="tab-btn" onclick="openTab('appointments')">Appointments</button>
+        <button class="tab-btn" onclick="openTab('inventory')">Inventory</button>
+        <button class="tab-btn" onclick="openTab('inventory_requests')">Inventory Requests</button>
+        <button class="tab-btn" onclick="openTab('invoices')">Invoices</button>
+    </div>
+
+    <div id="customers" class="tab-content active">
+        <h2>Customers</h2>
+        <table>
+            <tr>
+                <th>Customer ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Vehicle ID</th>
+                <th>Status</th>
+            </tr>
+            {% for customer in customers %}
+            <tr>
+                <td>{{ customer.CustomerID }}</td>
+                <td>{{ customer.Name }}</td>
+                <td>{{ customer.Email }}</td>
+                <td>{{ customer.Phone }}</td>
+                <td>{{ customer.VehicleID }}</td>
+                <td>{{ customer.CustomerStatus }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <div id="mechanics" class="tab-content">
+        <h2>Mechanics</h2>
+        <table>
+            <tr>
+                <th>Mechanic ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Level</th>
+                <th>Experience</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+            {% for mechanic in mechanics %}
+            <tr>
+                <td>{{ mechanic.MechanicID }}</td>
+                <td>{{ mechanic.Name }}</td>
+                <td>{{ mechanic.Email }}</td>
+                <td>{{ mechanic.Level }}</td>
+                <td>{{ mechanic.Experience }}</td>
+                <td>{{ mechanic.Status }}</td>
+                <td>
+                    <form action="{{ url_for('delete_mechanic') }}" method="POST">
+                        <input type="hidden" name="mechanic_id" value="{{ mechanic.MechanicID }}">
+                        <button type="submit" class="btn">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+        <h3>Add Mechanic</h3>
+        <form action="{{ url_for('add_mechanic') }}" method="POST">
+            <div class="textbox">
+                <label>Name:</label>
+                <input type="text" name="name" placeholder="Name" required>
+            </div>
+            <div class="textbox">
+                <label>Email:</label>
+                <input type="email" name="email" placeholder="Email" required>
+            </div>
+            <div class="textbox">
+                <label>Password:</label>
+                <input type="password" name="password" placeholder="Password" required>
+            </div>
+            <div class="textbox">
+                <label>Level:</label>
+                <select name="level" required>
+                    <option value="S">Senior</option>
+                    <option value="J">Junior</option>
+                </select>
+            </div>
+            <button type="submit" class="btn">Add Mechanic</button>
+        </form>
+    </div>
+
+    <div id="suppliers" class="tab-content">
+        <h2>Suppliers</h2>
+        <table>
+            <tr>
+                <th>Supplier ID</th>
+                <th>Name</th>
+                <th>Shop Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Unassigned Inventory Items</th>
+            </tr>
+            {% for supplier in suppliers %}
+            <tr>
+                <td>{{ supplier.SupplierID }}</td>
+                <td>{{ supplier.Name }}</td>
+                <td>{{ supplier.ShopName }}</td>
+                <td>{{ supplier.Email }}</td>
+                <td>{{ supplier.Phone }}</td>
+                <td>
+                    {% if unassigned_inventory %}
+                        {% for item in unassigned_inventory %}
+                            <div>
+                                {{ item.ItemName }} (Qty: {{ item.Quantity }})
+                                <form action="{{ url_for('assign_inventory_to_supplier') }}" method="POST">
+                                    <input type="hidden" name="inventory_id" value="{{ item.InventoryID }}">
+                                    <input type="hidden" name="supplier_id" value="{{ supplier.SupplierID }}">
+                                    <button type="submit" class="btn">Assign to {{ supplier.ShopName }}</button>
+                                </form>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        No unassigned inventory items.
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <div id="services" class="tab-content">
+        <h2>Customer Requested Services</h2>
+        <table>
+            <tr>
+                <th>Service ID</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Cost</th>
+                <th>Status</th>
+                <th>Assigned Mechanic</th>
+                <th>Assign/Update Mechanic</th>
+                <th>Update Status</th>
+            </tr>
+            {% for service in services %}
+            <tr>
+                <td>{{ service.ServiceID }}</td>
+                <td>{{ service.ServiceType }}</td>
+                <td>{{ service.Description }}</td>
+                <td>{{ service.Cost }}</td>
+                <td>{{ service.Status }}</td>
+                <td>
+                    {% if service.MechanicName %}
+                        {{ service.MechanicName }} ({{ service.MechanicID }})
+                    {% else %}
+                        Not Assigned
+                    {% endif %}
+                </td>
+                <td>
+                    <form action="{{ url_for('assign_mechanic') }}" method="POST">
+                        <input type="hidden" name="service_id" value="{{ service.ServiceID }}">
+                        <select name="mechanic_id" required>
+                            <option value="" disabled selected>Select Mechanic</option>
+                            {% for mechanic in mechanics %}
+                            <option value="{{ mechanic.MechanicID }}">{{ mechanic.Name }} ({{ mechanic.MechanicID }})</option>
+                            {% endfor %}
+                        </select>
+                        <button type="submit" class="btn">Assign/Update</button>
+                    </form>
+                </td>
+                <td>
+                    <form action="{{ url_for('update_service_status') }}" method="POST">
+                        <input type="hidden" name="service_id" value="{{ service.ServiceID }}">
+                        <select name="status" required>
+                            <option value="Pending" {% if service.Status == 'Pending' %}selected{% endif %}>Pending</option>
+                            <option value="Completed" {% if service.Status == 'Completed' %}selected{% endif %}>Completed</option>
+                        </select>
+                        <button type="submit" class="btn">Update</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+        <h3>Add New Service</h3>
+        <form action="{{ url_for('add_service') }}" method="POST">
+            <div class="textbox">
+                <label>Service Type:</label>
+                <select name="service_type" required>
+                    <option value="Mechanical">Mechanical</option>
+                    <option value="Electrical">Electrical</option>
+                    <option value="Others">Others</option>
+                </select>
+            </div>
+            <div class="textbox">
+                <label>Description:</label>
+                <input type="text" name="description" placeholder="Description" required>
+            </div>
+            <div class="textbox">
+                <label>Cost:</label>
+                <input type="number" step="0.01" name="cost" placeholder="Cost" required>
+            </div>
+            <div class="textbox">
+                <label>Assign Mechanic:</label>
+                <select name="mechanic_id">
+                    <option value="">None</option>
+                    {% for mechanic in mechanics %}
+                    <option value="{{ mechanic.MechanicID }}">{{ mechanic.Name }} ({{ mechanic.MechanicID }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn">Add Service</button>
+        </form>
+    </div>
+
+    <div id="appointments" class="tab-content">
+        <h2>Appointments</h2>
+        <table>
+            <tr>
+                <th>Appointment ID</th>
+                <th>Customer</th>
+                <th>Service</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th>Update Status</th>
+            </tr>
+            {% for appointment in appointments %}
+            <tr>
+                <td>{{ appointment.AppointmentID }}</td>
+                <td>{{ appointment.CustomerName }}</td>
+                <td>{{ appointment.ServiceDescription }}</td>
+                <td>{{ appointment.Date }}</td>
+                <td>{{ appointment.Status }}</td>
+                <td>
+                    <form action="{{ url_for('update_appointment_status') }}" method="POST">
+                        <input type="hidden" name="appointment_id" value="{{ appointment.AppointmentID }}">
+                        <select name="status" required>
+                            <option value="Not Yet Booked" {% if appointment.Status == 'Not Yet Booked' %}selected{% endif %}>Not Yet Booked</option>
+                            <option value="Confirmed" {% if appointment.Status == 'Confirmed' %}selected{% endif %}>Confirmed</option>
+                            <option value="Completed" {% if appointment.Status == 'Completed' %}selected{% endif %}>Completed</option>
+                        </select>
+                        <button type="submit" class="btn">Update</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <div id="inventory" class="tab-content">
+        <h2>Inventory</h2>
+        <table>
+            <tr>
+                <th>Inventory ID</th>
+                <th>Supplier</th>
+                <th>Item Name</th>
+                <th>Quantity</th>
+                <th>Price</th>
+            </tr>
+            {% for item in inventory %}
+            <tr>
+                <td>{{ item.InventoryID }}</td>
+                <td>{{ item.ShopName if item.ShopName else 'Pending Supplier' }}</td>
+                <td>{{ item.ItemName }}</td>
+                <td>{{ item.Quantity }}</td>
+                <td>{{ item.Price }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <div id="inventory_requests" class="tab-content">
+        <h2>Inventory Requests</h2>
+        <table>
+            <tr>
+                <th>Request ID</th>
+                <th>Mechanic</th>
+                <th>Item Name</th>
+                <th>Quantity</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+            {% for request in inventory_requests %}
+            <tr>
+                <td>{{ request.RequestID }}</td>
+                <td>{{ request.MechanicName }}</td>
+                <td>{{ request.ItemName }}</td>
+                <td>{{ request.Quantity }}</td>
+                <td>{{ request.Status }}</td>
+                <td>
+                    {% if request.Status == 'Pending' %}
+                    <form action="{{ url_for('manage_inventory_request') }}" method="POST">
+                        <input type="hidden" name="request_id" value="{{ request.RequestID }}">
+                        <button type="submit" name="action" value="approve" class="btn">Approve</button>
+                        <button type="submit" name="action" value="deny" class="btn">Deny</button>
+                    </form>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <div id="invoices" class="tab-content">
+        <h2>Invoices</h2>
+        <table>
+            <tr>
+                <th>Invoice ID</th>
+                <th>Customer</th>
+                <th>Service</th>
+                <th>Amount</th>
+                <th>Payment Method</th>
+                <th>Payment Status</th>
+                <th>Update Payment Status</th>
+            </tr>
+            {% for invoice in invoices %}
+            <tr>
+                <td>{{ invoice.InvoiceID }}</td>
+                <td>{{ invoice.CustomerName }}</td>
+                <td>{{ invoice.ServiceDescription }}</td>
+                <td>{{ invoice.Amount }}</td>
+                <td>{{ invoice.PaymentMethod if invoice.PaymentMethod else 'Not Set' }}</td>
+                <td>{{ invoice.PaymentStatus }}</td>
+                <td>
+                    <form action="{{ url_for('update_payment_status') }}" method="POST">
+                        <input type="hidden" name="invoice_id" value="{{ invoice.InvoiceID }}">
+                        <select name="status" required>
+                            <option value="Pending" {% if invoice.PaymentStatus == 'Pending' %}selected{% endif %}>Pending</option>
+                            <option value="Paid" {% if invoice.PaymentStatus == 'Paid' %}selected{% endif %}>Paid</option>
+                        </select>
+                        <button type="submit" class="btn">Update</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+</div>
+
+<script>
+    function openTab(tabName) {
+        var i, tabcontent, tablinks;
+        tabcontent = document.getElementsByClassName("tab-content");
+        for (i = 0; i < tabcontent.length; i++) {
+            tabcontent[i].style.display = "none";
+            tabcontent[i].classList.remove("active");
+        }
+        tablinks = document.getElementsByClassName("tab-btn");
+        for (i = 0; i < tablinks.length; i++) {
+            tablinks[i].classList.remove("active");
+        }
+        document.getElementById(tabName).style.display = "block";
+        document.getElementById(tabName).classList.add("active");
+        event.currentTarget.classList.add("active");
+    }
+
+    document.getElementsByClassName("tab-btn")[0].click();
+</script>
+{% endblock %}
